@@ -23,7 +23,6 @@ gamePage.directive('focusOnShow', function($timeout) {
                     }
                 })      
             }
-
         }
     };
 });
@@ -318,6 +317,10 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
 //        console.log('after whosTimeLeft:', whosTimeLeft);
         
         whosTimeLeft.countDownString = $scope.toTimeString(Math.floor(whosTimeLeft.countDown));
+		
+		var secRemain = whosTimeLeft.countDownString.match(/(\d+)s/)[1];
+		if(secRemain!=null && secRemain <=10)
+			$scope.sounds.countDown.play();
     }
     
     $scope.syncTimeLeft = function() {
@@ -424,7 +427,8 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
     $scope.sounds = {
 		msgPop:new Audio('../../sounds/undo.wav'),
         going:new Audio('../../sounds/stone.wav'),
-		gameover:new Audio('../../sounds/gameover.wav')
+		gameover:new Audio('../../sounds/gameover.wav'),
+		countDown:new Audio('../../sounds/time.wav')
     }
 
     //　----

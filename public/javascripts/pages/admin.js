@@ -12,7 +12,7 @@ admin.controller('adminController', function ($scope, $http, $window) {
 			url: '/admin/check_nickname',
 			method: 'POST',
 			data: JSON.stringify({nickname:$scope.nickname}),
-			headers: {'Content-Type': 'application/json'}
+			headers: {'Content-Type': 'application/json', 'X-Language': $scope.language}
         }).success(function(response) {
             console.log(response);
             if (response.messageTitle == 'Success')
