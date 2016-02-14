@@ -318,9 +318,11 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
         
         whosTimeLeft.countDownString = $scope.toTimeString(Math.floor(whosTimeLeft.countDown));
 		
-		var secRemain = whosTimeLeft.countDownString.match(/(\d+)s/)[1];
-		if(secRemain!=null && secRemain <=10)
-			$scope.sounds.countDown.play();
+		if(whosTimeLeft.countDownString.length<=2){
+			var secRemain = whosTimeLeft.countDownString.match(/(\d+)s/)[1];
+			if(secRemain!=null && secRemain <=10)
+				$scope.sounds.countDown.play();
+		}
     }
     
     $scope.syncTimeLeft = function() {
