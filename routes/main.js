@@ -192,6 +192,8 @@ io.on('connection', function (socket, connectedAckFunction) {
         //
         joinGame.startTime = new Date();
         joinGame.lastActionTime = new Date();
+        joinGame.blackActionTime = new Date();
+        joinGame.whiteActionTime = new Date();
         
         if (joinGame.rule === 'classic' || joinGame.rule === 'yamaguchi')
             joinGame.status = "opening";
@@ -697,6 +699,9 @@ io.on('connection', function (socket, connectedAckFunction) {
             return;
         }
         gameContinue(game, uTime);
+        // It is white's turn.
+        // Let white's last action is current.
+        game.whiteActionTime = new Date();
         
         Array.prototype.push.apply(game.moves, data.moves); // console.log(' After apply: ', game.moves);
         game.status = 'swapping'
@@ -754,7 +759,14 @@ io.on('connection', function (socket, connectedAckFunction) {
             var tempTimeLeft = JSON.parse(JSON.stringify(game.blackTimeLeft));
             game.blackTimeLeft = JSON.parse(JSON.stringify(game.whiteTimeLeft));
             game.whiteTimeLeft = tempTimeLeft;
-            console.log('After swap, blackTimeLeft/whiteTimeLeft ', game.blackTimeLeft, game.whiteTimeLeft);           
+            console.log('After swap, blackTimeLeft/whiteTimeLeft ', game.blackTimeLeft, game.whiteTimeLeft);     
+            
+            //Swap last action time
+            console.log('Before swap, blackActionTime/whiteActionTime ', game.blackActionTime, game.whiteActionTime);
+            var tempTime = game.blackActionTime;
+            game.blackActionTime = game.whiteActionTime;
+            game.whiteActionTime = tempTime;
+            console.log('After swap, blackActionTime/whiteActionTime ', game.blackActionTime, game.whiteActionTime);
         }
         
         io.sockets["in"]('room_' + game.seq).emit('game-swapped-receive', game);
@@ -1034,6 +1046,13 @@ function gameContinue(pGame, pTiming) {
     
     pGame.lastActionTime = new Date();
     pGame.lastActionTime.setTime(pGame.lastActionTime.getTime() + 400);
+    
+    if (pTiming.isBlacksTurn) {
+        pGame.blackActionTime = pGame.lastActionTime;
+    } else {
+        pGame.whiteActionTime = pGame.lastActionTime;
+    }
+    
     pGame.responseTime = new Date();
 //    pGame.responseTime.setTime(pGame.responseTime.getTime());
 }
