@@ -110,7 +110,7 @@ function translate($scope, language, filename){
 			$scope.str_white = '白方';
 			$scope.str_moves = '手數';
 			$scope.str_result = '結果';
-			$scope.str_record = '戰績';
+			$scope.str_record = '戰績(勝場)';
 			$scope.str_last10Games = '最近10場對局';
 			$scope.str_confirmAlts = '確定打點';
 			$scope.str_confirmOpening = '確定開局';
@@ -185,7 +185,7 @@ function translate($scope, language, filename){
 			$scope.str_white = 'White';
 			$scope.str_moves = 'Moves';
 			$scope.str_result = 'Result';
-			$scope.str_record = 'Record';
+			$scope.str_record = 'Record(Win)';
 			$scope.str_last10Games = 'Last 10 Games';
 			$scope.str_confirmAlts = 'Confirm these alternatives';
 			$scope.str_confirmOpening = 'Confirm this opening';

@@ -934,9 +934,7 @@ function saveGame(pGame) {
                 console.log(' Insert game error - ' + err.message);
             } else if (doc.result.ok == 1 && doc.result.n > 0) {
                 console.log(' Insert game success - seq value:', doc.ops[0]);
-                if (doc.ops[0].isRating) {
-                    summarizeRatingInfo(doc.ops[0]);
-                }
+                summarizeRatingInfo(doc.ops[0]);
             }
         }
     );
@@ -944,20 +942,26 @@ function saveGame(pGame) {
 
 function summarizeRatingInfo(pGame) {
     console.log('summarizeRatingInfo()', pGame.seq);
-    
         
     var updateUserRateInfo = function(pUser, isWon, isLost, isDraw, pScoreUpDown) {
         if (isWon) {
-            db.collection('user').update({username:pUser.username},  {$inc:{win:1, rating:10}});
+            db.collection('user').update({username:pUser.username},  {$inc:{win:1, rating:pScoreUpDown}});
         } else if (isLost) {
-            db.collection('user').update({username:pUser.username},  {$inc:{loss:1, rating:-10}});
+            db.collection('user').update({username:pUser.username},  {$inc:{loss:1, rating:pScoreUpDown}});
         } else {
-            db.collection('user').update({username:pUser.username},  {$inc:{draw:1, rating:0}});
+            db.collection('user').update({username:pUser.username},  {$inc:{draw:1, rating:pScoreUpDown}});
         }
     }
 
     function caculateAndUpdate() {
 //        console.log(' caculateAndUpdate() --  \n Game: %j  ', pGame);
+        var blackScoring = 0;
+        if (pGame.isRating) {
+            //TODO Rating formula here.........
+            if (pGame.winner.username === pGame.black.username) {
+                blackScoring = 10;
+            }
+        }
 
         if (!pGame.winner) {//Draw
             console.log('  Draw');
@@ -966,13 +970,13 @@ function summarizeRatingInfo(pGame) {
 
         } else if (pGame.winner.username === pGame.black.username) {
             console.log('  Black Win');
-            updateUserRateInfo(pGame.black, true, false, false, 0);
-            updateUserRateInfo(pGame.white, false, true, false, 0);
+            updateUserRateInfo(pGame.black, true, false, false, blackScoring);
+            updateUserRateInfo(pGame.white, false, true, false, -1 * blackScoring);
 
         } else if (pGame.winner.username === pGame.white.username) {
             console.log('  White Win');
-            updateUserRateInfo(pGame.black, false, true, false, 0);
-            updateUserRateInfo(pGame.white, true, false, false, 0);
+            updateUserRateInfo(pGame.black, false, true, false, blackScoring);
+            updateUserRateInfo(pGame.white, true, false, false, -1 * blackScoring);
 
         } else {
             console.log('  No one win?')
@@ -981,6 +985,10 @@ function summarizeRatingInfo(pGame) {
     }
         
     caculateAndUpdate();
+}
+
+function summarizeRecords(pGame) {
+    
 }
 
 // ------
