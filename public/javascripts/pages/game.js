@@ -271,13 +271,13 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
         
 //        console.log($scope.game.rule.perMovePlusTime);
         if ($scope.isBlackTurn()) {
-            $scope.calculateTimeLeft($scope.timeLeft.black);
+            $scope.calculateTimeLeft($scope.timeLeft.black, true);
             if ($scope.game.timeRule.perMovePlusTime) {
-                console.log(' White left time:' + $scope.timeLeft.white.timeLeft);
+                console.log(' Black left time:' + $scope.timeLeft.white.timeLeft);
                 $scope.timeLeft.white.countDownString = $scope.toTimeString(Math.round($scope.timeLeft.white.timeLeft));
             }
         } else {
-            $scope.calculateTimeLeft($scope.timeLeft.white);
+            $scope.calculateTimeLeft($scope.timeLeft.white, true);
             if ($scope.game.timeRule.perMovePlusTime) {
                 console.log(' White left time:' + $scope.timeLeft.white.timeLeft);
                 $scope.timeLeft.black.countDownString = $scope.toTimeString(Math.round($scope.timeLeft.black.timeLeft));
@@ -286,13 +286,17 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
     }
     
     $scope.calculateBothTimeLeft = function() {
-        $scope.calculateTimeLeft($scope.timeLeft.black);
-        $scope.calculateTimeLeft($scope.timeLeft.white);
+        var isItBlackTurn = $scope.isBlackTurn();
+        $scope.calculateTimeLeft($scope.timeLeft.black, isItBlackTurn);
+        $scope.calculateTimeLeft($scope.timeLeft.white, !isItBlackTurn);
     }
     
-    $scope.calculateTimeLeft = function(whosTimeLeft) {
+    $scope.calculateTimeLeft = function(whosTimeLeft, isItMyTurn) {
 //        console.log('before whosTimeLeft:', whosTimeLeft);
         var usedTime = Math.floor($scope.timeLeft.currentTime - new Date($scope.game.lastActionTime)) / 1000 - 1;
+        if (usedTime < 1)
+            usedTime = 0;
+        
 //        console.log('usedTime:', usedTime);
         // -- 1. Has basic time
         if (whosTimeLeft.timeLeft - usedTime >= 1) {
@@ -304,7 +308,12 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
             if ($scope.game.timeRule.perMoveTime) {
                 //  -- 2.1.1 Not use up perMoveTime
                 if (whosTimeLeft.timeLeft - usedTime + $scope.game.timeRule.perMoveTime > 0) {
-                    whosTimeLeft.countDown = whosTimeLeft.timeLeft - usedTime + $scope.game.timeRule.perMoveTime;
+                    
+                    // --2.1.1.1 One's turn must subtract used time.
+                    if (isItMyTurn) 
+                        whosTimeLeft.countDown = whosTimeLeft.timeLeft - usedTime + $scope.game.timeRule.perMoveTime;
+                    else
+                        whosTimeLeft.countDown = $scope.game.timeRule.perMoveTime;
                 //  -- 2.1.2 Use up perMoveTime
                 } else {
                     whosTimeLeft.countDown = 0;
