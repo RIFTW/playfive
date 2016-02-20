@@ -934,61 +934,105 @@ function saveGame(pGame) {
                 console.log(' Insert game error - ' + err.message);
             } else if (doc.result.ok == 1 && doc.result.n > 0) {
                 console.log(' Insert game success - seq value:', doc.ops[0]);
-                summarizeRatingInfo(doc.ops[0]);
+                var diffResult = summarizeRatingInfo(doc.ops[0]);
+                //當更新使用者積分資料成功，再回頭更新分數差回比賽棋局
+                if (diffResult) {
+                    db.collection('game').update(
+                        {_id:doc.ops[0]._id},
+                        {$set:{blackDiff:diffResult.blackDiff, whiteDiff:diffResult.whiteDiff}}
+                    );
+                }
             }
         }
     );
 }
 
+/**
+* 棋盤結束後，更新使用者資訊　勝場、敗場、和棋數
+* 若為積分對局，則更新積分結果
+*/
 function summarizeRatingInfo(pGame) {
     console.log('summarizeRatingInfo()', pGame.seq);
+    
+    var blackUser = m_onlineUsers.findUser(pGame.black.username);
+    var whiteUser = m_onlineUsers.findUser(pGame.white.username);
+    
+    var blackScoring = 0;
+    var whiteScoring = 0;
+    //1:win, -1:loss, 0: draw
+    var blackResult = 0;
+    var whiteResult = 0;
         
-    var updateUserRateInfo = function(pUser, isWon, isLost, isDraw, pScoreUpDown) {
-        if (isWon) {
-            db.collection('user').update({username:pUser.username},  {$inc:{win:1, rating:pScoreUpDown}});
-        } else if (isLost) {
-            db.collection('user').update({username:pUser.username},  {$inc:{loss:1, rating:pScoreUpDown}});
-        } else {
-            db.collection('user').update({username:pUser.username},  {$inc:{draw:1, rating:pScoreUpDown}});
+    /**
+    * @param result 1:win, -1:loss, 0: draw
+    */
+    var updateDBUserRateInfo = function(pUser, result, pScoreUpDown) {
+        /**
+        * After DB Update success, update the user online information.
+        */
+        var updateUserOnlineInfo = function() {
+            pUser.rating += pScoreUpDown;
         }
+        
+        if (result == 1) {
+            db.collection('user').update(
+                {username:pUser.username},  
+                {$inc:{win:1, rating:pScoreUpDown}}, 
+                updateUserOnlineInfo
+            );
+        } else if (result == -1) {
+            db.collection('user').update(
+                {username:pUser.username},  
+                {$inc:{loss:1, rating:pScoreUpDown}},
+                updateUserOnlineInfo
+            );
+        } else {
+            db.collection('user').update(
+                {username:pUser.username},  
+                {$inc:{draw:1, rating:pScoreUpDown}},
+                updateUserOnlineInfo
+            );
+        }
+    }
+    
+    /**
+    * @param point1 第一個人的積分
+    * @param point2 第二個人的積分
+    * @param wld 勝、負、和
+    */
+    function rankDiffFormula(point1, point2, wld){
+        var levelDiff = 1 / (1 + Math.pow(10, (point2 - point1) / 400));
+        return Math.round(32 * (wld - levelDiff));
     }
 
     function caculateAndUpdate() {
-//        console.log(' caculateAndUpdate() --  \n Game: %j  ', pGame);
-        var blackScoring = 0;
+        
         if (pGame.isRating) {
-            //TODO Rating formula here.........
             if (pGame.winner.username === pGame.black.username) {
-                blackScoring = 10;
+                blackScoring = rankDiffFormula(blackUser.rating, whiteUser.rating, 1);
+                whiteScoring = blackScoring * -1;
+                blackResult = 1;
+                whiteResult = -1;
+            } else if (pGame.winner.username === pGame.white.username) {
+                blackScoring = rankDiffFormula(blackUser.rating, whiteUser.rating, 0);
+                whiteScoring = blackScoring * -1;
+                blackResult = -1;
+                whiteResult = 1;
+            } else {
+                blackScoring = rankDiffFormula(blackUser.rating, whiteUser.rating, 0.5);
+                whiteScoring = blackScoring * -1;
+                blackResult = 0;
+                whiteResult = 0;
             }
         }
 
-        if (!pGame.winner) {//Draw
-            console.log('  Draw');
-            updateUserRateInfo(pGame.black, false, false, true, 0);
-            updateUserRateInfo(pGame.white, false, false, true, 0);
-
-        } else if (pGame.winner.username === pGame.black.username) {
-            console.log('  Black Win');
-            updateUserRateInfo(pGame.black, true, false, false, blackScoring);
-            updateUserRateInfo(pGame.white, false, true, false, -1 * blackScoring);
-
-        } else if (pGame.winner.username === pGame.white.username) {
-            console.log('  White Win');
-            updateUserRateInfo(pGame.black, false, true, false, blackScoring);
-            updateUserRateInfo(pGame.white, true, false, false, -1 * blackScoring);
-
-        } else {
-            console.log('  No one win?')
-        }
-
+        updateDBUserRateInfo(blackUser, blackResult, blackScoring);
+        updateDBUserRateInfo(whiteUser, whiteResult, whiteScoring);
     }
         
     caculateAndUpdate();
-}
-
-function summarizeRecords(pGame) {
     
+    return {blackDiff:blackScoring, whiteDiff:whiteScoring}
 }
 
 // ------
