@@ -282,8 +282,28 @@
     </div>
     
     <div class="col-sm-3  full-height">
-        <div class="panel panel-default full-height">
-            <h4 class="panel-title" style="margin:4px">{{str_channelNumber}} {{game.seq}} {{str_channel}}</h4>
+        <!-- Show message panel buttuon -->
+        <button class="btn btn-default btn-xs" 
+                style="position:absolute; right:0px; top:0px; height:18px; width:18px; margin:2px; padding:1px 1px;"
+                ng-hide="isShowMessage"
+                ng-click="isShowMessage = true">
+            <span class="glyphicon glyphicon-resize-full"></span>
+        </button>
+        
+        <!-- Message panel -->
+        <div class="panel panel-default full-height" ng-show="isShowMessage">
+            <div style="position:relative">
+                <h4 class="panel-title" style="margin:4px; padding-right:20px">
+                    {{str_channelNumber}} {{game.seq}} {{str_channel}} 
+                </h4>
+                <button 
+                        class="btn btn-default btn-xs" 
+                        style="position:absolute; right:0px; top:0px; height:18px; width:18px; margin:2px; padding:1px 1px;"
+                        ng-click="isShowMessage = false">
+                    <span class="glyphicon glyphicon-resize-small"></span>
+                </button>
+            </div>
+
             <div class="panel-body full-height">
                 <button id="btnGameChatBecomeAutoScroll" class="btn btn-default btn-xs" style="position:absolute; z-index:99; display:none;"
                         ng-click="becomeGameChatAutoScroll()">

@@ -406,6 +406,7 @@ gamePage.controller('gameController', function ($rootScope, $scope, $http, $wind
     // ----
     $scope.isLocked = false;
     $scope.isShowNumber = false;
+    $scope.isShowMessage = true;
     $scope.isDoubleClick = true;
     $scope.invalidOpeningMsg = null;
     
