@@ -626,12 +626,12 @@
     }
     
     Play5Board.prototype.navigateToBeginning = function() {
-        this.showingSeq = 1;
+        this.showingSeq = 0;
         this.showMoves();
     }
     
     Play5Board.prototype.navigateToPrevious = function() {
-        if (this.showingSeq > 1)
+        if (this.showingSeq >= 1)
             this.showingSeq--;
         this.showMoves();
     }
@@ -648,7 +648,7 @@
     }
     
     Play5Board.prototype.navigateToMove = function(pSeq) {
-        if (pSeq >= 1 && pSeq <= this.moves[this.moves.length - 1].seq) {
+        if (pSeq >= 0 && pSeq <= this.moves[this.moves.length - 1].seq) {
             this.showingSeq = pSeq;
             this.showMoves();
         }
